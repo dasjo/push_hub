@@ -195,7 +195,7 @@ class PuSHHubSubscriptions implements PuSHHubSubscriptionsInterface {
   public function all($topic) {
     $subscribers = array();
     $result = db_query("SELECT subscriber FROM {push_hub_subscriptions} WHERE topic = :topic", array(':topic' => $topic));
-    while ($row = db_fetch_object($result)) {
+    while ($row = $result->fetchObject()) {
       $subscribers[] = $row->subscriber;
     }
     return $subscribers;
