@@ -6,41 +6,41 @@
  * @todo Support notifications from publishers over HTTP.
  */
 
-include_once('PuSHHub.inc');
+include_once 'PuSHHub.inc';
 define('PUSH_HUB_NOTIFICATIONS_QUEUE', 'push_hub_notifications');
 
 /**
- * Implementation of hook_enable().
+ * Implements hook_enable().
  */
 function push_hub_enable() {
-  variable_set('queue_module_'. PUSH_HUB_NOTIFICATIONS_QUEUE, 'PuSHHub');
+  variable_set('queue_module_' . PUSH_HUB_NOTIFICATIONS_QUEUE, 'PuSHHub');
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function push_hub_menu() {
   $items = array();
   $items['pubsubhubbub/endpoint'] = array(
-   'page callback' => 'push_hub_endpoint',
-   'page arguments' => array(3, 4),
-   'access callback' => 'user_access',
-   'access arguments' => array('access content'), // @todo Specific permission
-   'file' => 'push_hub.pages.inc',
-   'type' => MENU_CALLBACK,
+    'page callback' => 'push_hub_endpoint',
+    'page arguments' => array(3, 4),
+    'access callback' => 'user_access',
+    'access arguments' => array('access content'), // @todo Specific permission
+    'file' => 'push_hub.pages.inc',
+    'type' => MENU_CALLBACK,
   );
   return $items;
 }
 
 /**
- * Implementation of hook_cron().
+ * Implements hook_cron().
  */
 function push_hub_cron() {
   push_hub()->expire();
 }
 
 /**
- * Implementation of hook_cron_queue_info().
+ * Implements hook_cron_queue_info().
  * Invoked by drupal_queue module if present.
  */
 function push_hub_cron_queue_info() {
@@ -53,7 +53,7 @@ function push_hub_cron_queue_info() {
 }
 
 /**
- * Implementation of hook_push_hub_drupal_queue_load_classes().
+ * Implements hook_push_hub_drupal_queue_load_classes().
  */
 function push_hub_drupal_queue_load_classes() {
   module_load_include('inc', 'push_hub', 'PuSHHubQueue');
@@ -80,13 +80,18 @@ function push_hub_notify($topic, $changed = NULL, $batch = FALSE) {
     $operations = array();
     foreach (push_hub()->allSubscribers($topic) as $subscriber) {
       $operations[] = array(
-        'push_hub_notify_subscriber_batchapi', array(array('topic' => $topic, 'subscriber' => $subscriber, 'changed' => $changed)),
+        'push_hub_notify_subscriber_batchapi',
+        array(array(
+            'topic' => $topic,
+            'subscriber' => $subscriber,
+            'changed' => $changed,
+          )),
       );
     }
     $batch = array(
       'title' => t('Notifying subscribers'),
-      'operations' => $operations
-      );
+      'operations' => $operations,
+    );
     batch_set($batch);
   }
   else {
@@ -116,7 +121,7 @@ function push_hub_notify_subscriber_batchapi($info, &$context) {
 function push_hub_notify_subscriber($info) {
   if (!push_hub()->notify($info['topic'], $info['subscriber'], isset($info['changed']) ? $info['changed'] : NULL)) {
     // On failure, queue for later notification.
-    push_hub_queue()->createItem($info, time() + 5 * 60);
+    push_hub_queue()->createItem($info, REQUEST_TIME + 5 * 60);
   }
 }
 
@@ -153,8 +158,7 @@ class PuSHHubSubscriptions implements PuSHHubSubscriptionsInterface {
   /**
    * Protect constructor.
    */
-  protected function __construct() {
-  }
+  protected function __construct() { }
 
   /**
    * Save a subscription.
@@ -165,7 +169,7 @@ class PuSHHubSubscriptions implements PuSHHubSubscriptionsInterface {
       'topic' => $topic,
       'subscriber' => $subscriber,
       'secret' => $secret,
-      'timestamp' => time(),
+      'timestamp' => REQUEST_TIME,
     );
     drupal_write_record('push_hub_subscriptions', $subscription);
   }
@@ -174,7 +178,12 @@ class PuSHHubSubscriptions implements PuSHHubSubscriptionsInterface {
    * Delete a subscription.
    */
   public function delete($topic, $subscriber) {
-    db_query("DELETE FROM {push_hub_subscriptions} WHERE topic = '%s' AND subscriber = '%s'", $topic, $subscriber);
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query("DELETE FROM {push_hub_subscriptions} WHERE topic = '%s' AND subscriber = '%s'", $topic, $subscriber) */
+    db_delete('push_hub_subscriptions')
+  ->condition('topic', $topic)
+  ->condition('subscriber', $subscriber)
+  ->execute();
   }
 
   /**
@@ -185,7 +194,7 @@ class PuSHHubSubscriptions implements PuSHHubSubscriptionsInterface {
    */
   public function all($topic) {
     $subscribers = array();
-    $result = db_query("SELECT subscriber FROM {push_hub_subscriptions} WHERE topic = '%s'", $topic);
+    $result = db_query("SELECT subscriber FROM {push_hub_subscriptions} WHERE topic = :topic", array(':topic' => $topic));
     while ($row = db_fetch_object($result)) {
       $subscribers[] = $row->subscriber;
     }
@@ -196,13 +205,17 @@ class PuSHHubSubscriptions implements PuSHHubSubscriptionsInterface {
    * Retrieve a shared secret.
    */
   public function secret($topic, $subscriber) {
-    return db_result(db_query("SELECT secret FROM {push_hub_subscriptions} WHERE topic = '%s' AND subscriber = '%s'", $topic, $subscriber));
+    return db_query("SELECT secret FROM {push_hub_subscriptions} WHERE topic = :topic AND subscriber = :subscriber", array(':topic' => $topic, ':subscriber' => $subscriber))->fetchField();
   }
 
   /**
    * Expire subscriptions.
    */
   public function expire($time) {
-    db_query("DELETE FROM {push_hub_subscriptions} WHERE timestamp < %d", time() - $time);
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query("DELETE FROM {push_hub_subscriptions} WHERE timestamp < %d", REQUEST_TIME - $time) */
+    db_delete('push_hub_subscriptions')
+  ->condition('timestamp', REQUEST_TIME - $time, '<')
+  ->execute();
   }
 }

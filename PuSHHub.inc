@@ -75,11 +75,11 @@ class PuSHHub {
     // Send verification request to subscriber.
     $challenge = md5(session_id() . rand());
     $query = array(
-      'hub.mode='. $post['hub_mode'],
-      'hub.topic='. urlencode($post['hub_topic']),
-      'hub.challenge='. $challenge,
-      'hub.lease_seconds='. PUSH_HUB_LEASE_SECONDS, // disregard what's been requested ($post['hub_lease_seconds'])
-      'hub.verify_token='. $post['hub_verify_token'],
+      'hub.mode=' . $post['hub_mode'],
+      'hub.topic=' . urlencode($post['hub_topic']),
+      'hub.challenge=' . $challenge,
+      'hub.lease_seconds=' . PUSH_HUB_LEASE_SECONDS, // disregard what's been requested ($post['hub_lease_seconds'])
+      'hub.verify_token=' . $post['hub_verify_token'],
     );
     $parsed = parse_url($post['hub_callback']);
     $request = curl_init($post['hub_callback'] . (empty($parsed['query']) ? '?' : '&') . implode('&', $query));
@@ -123,16 +123,16 @@ class PuSHHub {
    */
   protected function fatPing($url, $content, $secret) {
     $result = FALSE;
-    $params = array('http' =>
-                array(
-                  'method' => 'POST',
-                  'content' => $content,
-                  'header' => "Content-Type: application/atom+xml\n".
-                              "Content-Length: ". strlen($content) ."\n",
-                ),
-              );
+    $params = array(
+      'http' => array(
+        'method' => 'POST',
+        'content' => $content,
+        'header' => "Content-Type: application/atom+xml\n" .
+                              "Content-Length: " . strlen($content) . "\n",
+      ),
+    );
     if (!empty($secret)) {
-      $params['http']['header'] .= "X-Hub-Signature: sha1=". hash_hmac('sha1', $content, $secret) ."\n";
+      $params['http']['header'] .= "X-Hub-Signature: sha1=" . hash_hmac('sha1', $content, $secret) . "\n";
     }
     $params['http']['header'] . "\n";
     $ctx = stream_context_create($params);

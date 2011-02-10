@@ -1,4 +1,9 @@
 name = "PubSubHubbub Hub"
 description = "Allows Drupal to act as a PubsubHubbub hub."
-dependencies[] = drupal_queue
-core = 6.x
+#dependencies[] = drupal_queue
+core = 7.x
+files[] = PuSHHub.inc
+files[] = PuSHHubQueue.inc
+files[] = push_hub.install
+files[] = push_hub.module
+files[] = push_hub.pages.inc

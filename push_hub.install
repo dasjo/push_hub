@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function push_hub_schema() {
   $schema = array();
@@ -30,12 +30,12 @@ function push_hub_schema() {
       'topic' => array(
         'type' => 'text',
         'not null' => TRUE,
-        'description' => t('The topic URL (feed URL) of this subscription.'),
+        'description' => 'The topic URL (feed URL) of this subscription.',
       ),
       'subscriber' => array(
         'type' => 'text',
         'not null' => TRUE,
-        'description' => t('The subscriber\'s notification URL.'),
+        'description' => 'The subscriber\'s notification URL.',
       ),
     ),
     'indexes' => array(
@@ -48,19 +48,21 @@ function push_hub_schema() {
 }
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function push_hub_install() {
   // Create tables.
-  drupal_install_schema('push_hub');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_install_schema('push_hub')
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function push_hub_uninstall() {
   // Remove tables.
-  drupal_uninstall_schema('push_hub');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_uninstall_schema('push_hub')
 }
 
 /**
@@ -95,6 +97,9 @@ function push_hub_update_6001() {
       'topic_subscriber' => array(array('topic', 255), array('subscriber', 255)),
     ),
   );
-  db_create_table($ret, 'push_hub_subscriptions', $table);
-  return $ret;
+  db_create_table('push_hub_subscriptions', $table);
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }

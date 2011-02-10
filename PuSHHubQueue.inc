@@ -18,7 +18,7 @@ class PuSHHubQueue extends SystemQueue {
     $record->name = $this->name;
     $record->data = $data;
     $record->expire = $delay;
-    $record->created = time();
+    $record->created = REQUEST_TIME;
     return drupal_write_record('queue', $record) !== FALSE;
   }
 }
