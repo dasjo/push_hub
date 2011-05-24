@@ -41,7 +41,6 @@ function push_hub_cron() {
 
 /**
  * Implements hook_cron_queue_info().
- * Invoked by drupal_queue module if present.
  */
 function push_hub_cron_queue_info() {
   $queues = array();
@@ -129,8 +128,7 @@ function push_hub_notify_subscriber($info) {
  * Instantiates a Drupal queue for push_hub.
  */
 function push_hub_queue() {
-  drupal_queue_include();
-  return drupal_queue_get(PUSH_HUB_NOTIFICATIONS_QUEUE);
+  return DrupalQueue::get(PUSH_HUB_NOTIFICATIONS_QUEUE);
 }
 
 /**
